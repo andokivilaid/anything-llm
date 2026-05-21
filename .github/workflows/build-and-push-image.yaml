@@ -11,21 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  push:
-    branches: ['master'] # master branch only. Do not modify.
-    paths-ignore:
-      - '**.md'
-      - '.gitmodules'
-      - 'cloud-deployments/**/*'
-      - 'images/**/*'
-      - '.vscode/**/*'
-      - '**/.env.example'
-      - '.github/ISSUE_TEMPLATE/**/*'
-      - '.devcontainer/**/*'
-      - 'embed/**/*' # Embed is submodule
-      - 'browser-extension/**/*' # Chrome extension is submodule
-      - 'server/utils/agents/aibitat/example/**/*' # Do not push new image for local dev testing of new aibitat images.
-      - 'extras/**/*' # Extra is just for news and other local content.
+  # Disabled in fork — see fork-build.yaml. Manual trigger only.
+  workflow_dispatch:
 
 jobs:
   push_multi_platform_to_registries:
