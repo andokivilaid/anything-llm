@@ -157,12 +157,13 @@ RUN yarn install --production --network-timeout 100000 && yarn cache clean
 COPY --chown=anythingllm:anythingllm ./server /app/server/
 WORKDIR /app
 
-# Collector: same pattern.
+# Collector: same pattern. Use absolute COPY target — WORKDIR is /app/collector
+# at this point, so a relative `./collector/` would land in /app/collector/collector/.
 COPY --chown=anythingllm:anythingllm ./collector/package.json ./collector/yarn.lock /app/collector/
 WORKDIR /app/collector
 ENV PUPPETEER_DOWNLOAD_BASE_URL=https://storage.googleapis.com/chrome-for-testing-public
 RUN yarn install --production --network-timeout 100000 && yarn cache clean
-COPY --chown=anythingllm:anythingllm ./collector/ ./collector/
+COPY --chown=anythingllm:anythingllm ./collector/ /app/collector/
 
 WORKDIR /app
 USER anythingllm
