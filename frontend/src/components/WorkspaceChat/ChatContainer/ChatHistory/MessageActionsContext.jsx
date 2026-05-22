@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 
 const EDIT_EVENT = "toggle-message-edit";
@@ -71,10 +72,15 @@ export function MessageActionsProvider({ children }) {
     setEditingMessage(null);
   }, []);
 
+  // Memoize the context value so every parent re-render (common during
+  // streaming) doesn't force every message consumer to re-render.
+  const value = useMemo(
+    () => ({ editingMessage, isEditing, isDeleted, clearEditing }),
+    [editingMessage, isEditing, isDeleted, clearEditing]
+  );
+
   return (
-    <MessageActionsContext.Provider
-      value={{ editingMessage, isEditing, isDeleted, clearEditing }}
-    >
+    <MessageActionsContext.Provider value={value}>
       {children}
     </MessageActionsContext.Provider>
   );

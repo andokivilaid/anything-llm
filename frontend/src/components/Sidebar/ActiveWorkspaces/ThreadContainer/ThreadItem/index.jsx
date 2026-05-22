@@ -10,7 +10,9 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/keys";
 
 const THREAD_CALLOUT_DETAIL_WIDTH = 26;
 export default function ThreadItem({
@@ -172,6 +174,8 @@ function OptionsMenu({
   currentThreadSlug,
 }) {
   const menuRef = useRef(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Ref menu options
   const outsideClick = (e) => {
@@ -246,9 +250,12 @@ function OptionsMenu({
     if (success) {
       showToast("Thread deleted successfully!", "success", { clear: true });
       onRemove(thread.id);
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.threads(workspace.slug),
+      });
       // Redirect if deleting the active thread
       if (currentThreadSlug === thread.slug) {
-        window.location.href = paths.workspace.chat(workspace.slug);
+        navigate(paths.workspace.chat(workspace.slug));
       }
       return;
     }

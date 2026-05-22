@@ -4,7 +4,10 @@ import showToast from "@/utils/toast";
 import { Plus, CircleNotch, Trash } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import ThreadItem from "./ThreadItem";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWorkspaceThreads } from "@/hooks/queries/useWorkspaces";
+import { queryKeys } from "@/hooks/queries/keys";
 export const THREAD_RENAME_EVENT = "renameThread";
 
 export default function ThreadContainer({
@@ -12,9 +15,19 @@ export default function ThreadContainer({
   isVirtualThread = false,
 }) {
   const { threadSlug = null } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: fetchedThreads = [], isLoading: loading } = useWorkspaceThreads(
+    workspace.slug
+  );
   const [threads, setThreads] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [ctrlPressed, setCtrlPressed] = useState(false);
+
+  // Sync local list from query cache. Local state stays because the UI mutates
+  // it for optimistic delete/rename flows; the cache is the source of truth.
+  useEffect(() => {
+    setThreads(fetchedThreads);
+  }, [fetchedThreads]);
 
   useEffect(() => {
     const chatHandler = (event) => {
@@ -35,16 +48,6 @@ export default function ThreadContainer({
       window.removeEventListener(THREAD_RENAME_EVENT, chatHandler);
     };
   }, []);
-
-  useEffect(() => {
-    async function fetchThreads() {
-      if (!workspace.slug) return;
-      const { threads } = await Workspace.threads.all(workspace.slug);
-      setLoading(false);
-      setThreads(threads);
-    }
-    fetchThreads();
-  }, [workspace.slug]);
 
   // Enable toggling of bulk-deletion by holding meta-key (ctrl on win and cmd/fn on others)
   useEffect(() => {
@@ -90,10 +93,13 @@ export default function ThreadContainer({
     const slugs = threads.filter((t) => t.deleted === true).map((t) => t.slug);
     await Workspace.threads.deleteBulk(workspace.slug, slugs);
     setThreads((prev) => prev.filter((t) => !t.deleted));
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.workspaces.threads(workspace.slug),
+    });
 
     // Only redirect if current thread is being deleted
     if (slugs.includes(threadSlug)) {
-      window.location.href = paths.workspace.chat(workspace.slug);
+      navigate(paths.workspace.chat(workspace.slug));
     }
   };
 
@@ -174,6 +180,8 @@ export default function ThreadContainer({
 
 function NewThreadButton({ workspace }) {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const onClick = async () => {
     setLoading(true);
     const { thread, error } = await Workspace.threads.new(workspace.slug);
@@ -182,9 +190,12 @@ function NewThreadButton({ workspace }) {
       setLoading(false);
       return;
     }
-    window.location.replace(
-      paths.workspace.thread(workspace.slug, thread.slug)
-    );
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.workspaces.threads(workspace.slug),
+    });
+    navigate(paths.workspace.thread(workspace.slug, thread.slug), {
+      replace: true,
+    });
   };
 
   return (

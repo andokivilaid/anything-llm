@@ -1035,6 +1035,18 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.18.0.tgz#20b033d1f542a100c1d57cfd18ecf442d1784732"
   integrity sha512-L3jkqmqoSVBVKHfpGZmLrex0lxR5SucGA0sUfFzGctehw+S/ggL9L/0NnC5mw6P8HUWpFZ3nQw3cRApjjWx9Sw==
 
+"@tanstack/query-core@5.100.13":
+  version "5.100.13"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.100.13.tgz#24a5a407cb70db306826e101b8560cba26e61a5e"
+  integrity sha512-mlKVKMTzZWGTKAC1CKOgt7axAjJ921emkEvYIp27I/PdP1yEYL/BteLY8iK35gn8hoYeKB4mgJ/ve3lrDI6/Fw==
+
+"@tanstack/react-query@^5.100.13":
+  version "5.100.13"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.100.13.tgz#58736d35c43e120f93a665254629509d5bc16d48"
+  integrity sha512-HSBr8CycQEAoXsJR7KNDawBnINJEJ96Eme8oE0hCXjyodE2I97vg3IDzDJBDu18LsbzpVVJcKo80eqLfVCykxw==
+  dependencies:
+    "@tanstack/query-core" "5.100.13"
+
 "@tanstack/react-virtual@^3.0.0-beta.60":
   version "3.8.3"
   resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.8.3.tgz#3455fd7e259655ab555ac130b5ac59c3eeae98bc"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import * as Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Workspace from "@/models/workspace";
@@ -14,26 +14,24 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import showToast from "@/utils/toast";
 import { LAST_VISITED_WORKSPACE } from "@/utils/constants";
 import { safeJsonParse } from "@/utils/request";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWorkspaces } from "@/hooks/queries/useWorkspaces";
+import { queryKeys } from "@/hooks/queries/keys";
 
 export default function ActiveWorkspaces() {
   const navigate = useNavigate();
   const { slug } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [workspaces, setWorkspaces] = useState([]);
+  const queryClient = useQueryClient();
+  const { data: rawWorkspaces = [], isLoading: loading } = useWorkspaces();
+  const workspaces = useMemo(
+    () => Workspace.orderWorkspaces(rawWorkspaces),
+    [rawWorkspaces]
+  );
   const [selectedWs, setSelectedWs] = useState(null);
   const { showing, showModal, hideModal } = useManageWorkspaceModal();
   const { user } = useUser();
   const isInWorkspaceSettings = !!useMatch("/workspace/:slug/settings/:tab");
   const isHomePage = !!useMatch("/");
-
-  useEffect(() => {
-    async function getWorkspaces() {
-      const workspaces = await Workspace.all();
-      setLoading(false);
-      setWorkspaces(Workspace.orderWorkspaces(workspaces));
-    }
-    getWorkspaces();
-  }, []);
 
   if (loading) {
     return (
@@ -58,13 +56,15 @@ export default function ActiveWorkspaces() {
     const reorderedWorkspaces = Array.from(workspaces);
     const [removed] = reorderedWorkspaces.splice(startIndex, 1);
     reorderedWorkspaces.splice(endIndex, 0, removed);
-    setWorkspaces(reorderedWorkspaces);
+    // Optimistically reflect the new order in the cache so the UI updates
+    // without a refetch. `orderWorkspaces` re-applies stored order on read.
+    queryClient.setQueryData(queryKeys.workspaces.list(), reorderedWorkspaces);
     const success = Workspace.storeWorkspaceOrder(
       reorderedWorkspaces.map((w) => w.id)
     );
     if (!success) {
       showToast("Failed to reorder workspaces", "error");
-      Workspace.all().then((workspaces) => setWorkspaces(workspaces));
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
     }
   }
 

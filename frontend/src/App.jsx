@@ -15,6 +15,19 @@ import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 import ImageLightbox from "@/components/ImageLightbox";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep results fresh for 30s — avoids the "fetch on every nav" feel
+      // without breaking real-time updates from streaming chat.
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export default function App() {
   const location = useLocation();
@@ -24,24 +37,26 @@ export default function App() {
       onError={console.error}
       resetKeys={[location.pathname]}
     >
-      <ThemeProvider>
-        <PWAModeProvider>
-          <Suspense fallback={<FullScreenLoader />}>
-            <AuthProvider>
-              <LogoProvider>
-                <PfpProvider>
-                  <I18nextProvider i18n={i18n}>
-                    <Outlet />
-                    <ToastContainer />
-                    <KeyboardShortcutsHelp />
-                    <ImageLightbox />
-                  </I18nextProvider>
-                </PfpProvider>
-              </LogoProvider>
-            </AuthProvider>
-          </Suspense>
-        </PWAModeProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <PWAModeProvider>
+            <Suspense fallback={<FullScreenLoader />}>
+              <AuthProvider>
+                <LogoProvider>
+                  <PfpProvider>
+                    <I18nextProvider i18n={i18n}>
+                      <Outlet />
+                      <ToastContainer />
+                      <KeyboardShortcutsHelp />
+                      <ImageLightbox />
+                    </I18nextProvider>
+                  </PfpProvider>
+                </LogoProvider>
+              </AuthProvider>
+            </Suspense>
+          </PWAModeProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

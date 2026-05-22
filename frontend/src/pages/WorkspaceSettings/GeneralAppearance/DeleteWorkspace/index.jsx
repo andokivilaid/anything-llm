@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Workspace from "@/models/workspace";
 import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
 import showToast from "@/utils/toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/keys";
 
 export default function DeleteWorkspace({ workspace, visible = true }) {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
 
@@ -28,9 +32,8 @@ export default function DeleteWorkspace({ workspace, visible = true }) {
       return;
     }
 
-    workspace.slug === slug
-      ? (window.location = paths.home())
-      : window.location.reload();
+    queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all });
+    if (workspace.slug === slug) navigate(paths.home(), { replace: true });
   };
 
   if (!visible) return null;

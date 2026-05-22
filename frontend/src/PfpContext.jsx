@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useMemo } from "react";
 import useUser from "./hooks/useUser";
 import System from "./models/system";
 
@@ -22,9 +22,7 @@ export function PfpProvider({ children }) {
     fetchPfp();
   }, [user?.id]);
 
-  return (
-    <PfpContext.Provider value={{ pfp, setPfp }}>
-      {children}
-    </PfpContext.Provider>
-  );
+  const value = useMemo(() => ({ pfp, setPfp }), [pfp]);
+
+  return <PfpContext.Provider value={value}>{children}</PfpContext.Provider>;
 }

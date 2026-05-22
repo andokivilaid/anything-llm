@@ -1,15 +1,20 @@
 import React, { useRef, useState } from "react";
 import { X } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 import Workspace from "@/models/workspace";
 import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
 import ModalWrapper from "@/components/ModalWrapper";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/keys";
 
 const noop = () => false;
 export default function NewWorkspaceModal({ hideModal = noop }) {
   const formEl = useRef(null);
   const [error, setError] = useState(null);
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const handleCreate = async (e) => {
     setError(null);
     e.preventDefault();
@@ -18,7 +23,8 @@ export default function NewWorkspaceModal({ hideModal = noop }) {
     for (var [key, value] of form.entries()) data[key] = value;
     const { workspace, message } = await Workspace.new(data);
     if (!!workspace) {
-      window.location.href = paths.workspace.chat(workspace.slug);
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all });
+      navigate(paths.workspace.chat(workspace.slug));
     }
     setError(message);
   };

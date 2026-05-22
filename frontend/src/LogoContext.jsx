@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 import AnythingLLM from "./media/logo/anything-llm.png";
 import AnythingLLMDark from "./media/logo/anything-llm-dark.png";
 import DefaultLoginLogoLight from "./media/illustrations/login-logo.svg";
@@ -48,9 +48,10 @@ export function LogoProvider({ children }) {
     };
   }, []);
 
-  return (
-    <LogoContext.Provider value={{ logo, setLogo, loginLogo, isCustomLogo }}>
-      {children}
-    </LogoContext.Provider>
+  const value = useMemo(
+    () => ({ logo, setLogo, loginLogo, isCustomLogo }),
+    [logo, loginLogo, isCustomLogo]
   );
+
+  return <LogoContext.Provider value={value}>{children}</LogoContext.Provider>;
 }

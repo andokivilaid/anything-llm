@@ -1,4 +1,4 @@
-import React, { useState, createContext, useEffect } from "react";
+import React, { useState, createContext, useEffect, useMemo } from "react";
 import {
   AUTH_TIMESTAMP,
   AUTH_TOKEN,
@@ -71,9 +71,9 @@ export function AuthProvider(props) {
     if (store.authToken) refreshUser();
   }, [store.authToken]);
 
+  const value = useMemo(() => ({ store, actions }), [store, actions]);
+
   return (
-    <AuthContext.Provider value={{ store, actions }}>
-      {props.children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{props.children}</AuthContext.Provider>
   );
 }
