@@ -659,11 +659,30 @@ class AgentHandler {
         continue;
       }
 
+      const AIbitatPlugin = AgentPlugins[name];
+
+      // Multi-stage plugin selected without a #child suffix (e.g. "sql-agent"
+      // picked from the scheduled-job tools UI). The plugin exports its sub-
+      // skills as an array; calling `.plugin()` would throw "not a function".
+      // Expand to all sub-skills, mirroring the behavior of the `parent#child`
+      // branch above.
+      if (Array.isArray(AIbitatPlugin.plugin)) {
+        for (const subPlugin of AIbitatPlugin.plugin) {
+          const subCallOpts = this.parseCallOptions(
+            args,
+            subPlugin?.startupConfig?.params,
+            `${name}#${subPlugin.name}`
+          );
+          this.aibitat.use(subPlugin.plugin(subCallOpts));
+          this.log(`Attached ${name}:${subPlugin.name} plugin to Agent cluster`);
+        }
+        continue;
+      }
+
       const callOpts = this.parseCallOptions(
         args,
-        AgentPlugins[name].startupConfig.params
+        AIbitatPlugin.startupConfig.params
       );
-      const AIbitatPlugin = AgentPlugins[name];
       this.aibitat.use(AIbitatPlugin.plugin(callOpts));
       this.log(`Attached ${name} plugin to Agent cluster`);
     }
