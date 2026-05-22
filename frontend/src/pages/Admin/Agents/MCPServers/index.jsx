@@ -143,7 +143,8 @@ function AddMCPServerModal({ onClose, onCreated }) {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
     if (submitting) return;
 
     if (!name.trim()) {
@@ -236,7 +237,15 @@ function AddMCPServerModal({ onClose, onCreated }) {
             <X size={20} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-y-3 text-sm">
+        <div
+          className="flex flex-col gap-y-3 text-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        >
           <label className="flex flex-col gap-y-1">
             <span>Name *</span>
             <input
@@ -344,14 +353,15 @@ function AddMCPServerModal({ onClose, onCreated }) {
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               className="px-4 py-2 rounded bg-cta-button text-black font-medium disabled:opacity-50"
               disabled={submitting}
             >
               {submitting ? "Adding..." : "Add server"}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
