@@ -237,9 +237,45 @@ class GeminiProvider extends Provider {
       function: {
         name: this.prefixToolCall(func.name, "add"),
         description: func.description,
-        parameters: func.parameters,
+        parameters: this.constructor.sanitizeSchemaForGemini(func.parameters),
       },
     }));
+  }
+
+  /**
+   * Sanitize a JSON Schema so Gemini's draft-2020-12 validator accepts it.
+   *
+   * The known incompatibilities we handle:
+   *   - `items: [{...}, {...}]` (draft-7 tuple validation) — Gemini requires `items`
+   *     to be a single schema object or boolean. We collapse to the first entry
+   *     when all entries are equal-by-stringification, otherwise to `{}` (accept
+   *     anything), and move the original tuple into `prefixItems` for clients that
+   *     understand it.
+   *
+   * Walks objects/arrays recursively. Returns a fresh tree — input is not mutated.
+   * Static so it can be unit-tested without instantiating the provider.
+   *
+   * @param {unknown} schema
+   * @returns {unknown}
+   */
+  static sanitizeSchemaForGemini(schema) {
+    if (Array.isArray(schema)) return schema.map((s) => this.sanitizeSchemaForGemini(s));
+    if (!schema || typeof schema !== "object") return schema;
+
+    const out = {};
+    for (const [key, value] of Object.entries(schema)) {
+      if (key === "items" && Array.isArray(value)) {
+        const sanitizedTuple = value.map((s) => this.sanitizeSchemaForGemini(s));
+        const allSame = sanitizedTuple.every(
+          (s) => JSON.stringify(s) === JSON.stringify(sanitizedTuple[0])
+        );
+        out.items = allSame && sanitizedTuple.length > 0 ? sanitizedTuple[0] : {};
+        out.prefixItems = sanitizedTuple;
+        continue;
+      }
+      out[key] = this.sanitizeSchemaForGemini(value);
+    }
+    return out;
   }
 
   async stream(messages, functions = [], eventHandler = null) {
