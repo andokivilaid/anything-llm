@@ -73,14 +73,16 @@ export default defineConfig({
           if (id.includes("/react-router-dom/") || id.includes("/react-router/")) return "vendor-router";
           if (id.match(/node_modules\/(react|react-dom|scheduler)\//)) return "vendor-react";
           if (id.includes("react-beautiful-dnd")) return "vendor-dnd";
-          if (id.includes("/recharts/") || id.includes("recharts-to-png")) return "vendor-charts";
-          if (id.includes("@tremor")) return "vendor-tremor";
           if (id.includes("highlight.js")) return "vendor-highlight";
           if (id.includes("markdown-it") || id.includes("/katex/")) return "vendor-markdown";
           if (id.includes("/moment/")) return "vendor-moment";
           if (id.includes("@phosphor-icons")) return "vendor-icons";
           if (id.includes("i18next")) return "vendor-i18n";
           if (id.includes("/dompurify/")) return "vendor-purify";
+          // recharts + @tremor intentionally NOT split: they have internal
+          // circular imports that break when forced into an isolated chunk
+          // (manifests as `Cannot access 'X' before initialization` at runtime).
+          // Let Vite chunk them with their lazy-loaded admin route owners.
           return undefined;
         },
       },
