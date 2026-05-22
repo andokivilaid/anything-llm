@@ -53,6 +53,28 @@ function mcpServersEndpoints(app) {
   );
 
   app.post(
+    "/mcp-servers/new",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const { name, server } = reqBody(request);
+        const result = await new MCPCompatibilityLayer().createServer({
+          name,
+          server,
+        });
+        return response.status(result.success ? 200 : 400).json(result);
+      } catch (error) {
+        console.error("Error creating MCP server:", error);
+        return response.status(500).json({
+          success: false,
+          error: error.message,
+          started: false,
+        });
+      }
+    }
+  );
+
+  app.post(
     "/mcp-servers/toggle",
     [validatedRequest, flexUserRoleValid([ROLES.admin])],
     async (request, response) => {

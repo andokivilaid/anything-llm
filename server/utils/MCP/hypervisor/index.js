@@ -109,6 +109,51 @@ class MCPHypervisor {
   }
 
   /**
+   * Add a new MCP server entry to the JSON config file. Does NOT start the server —
+   * caller should run `startMCPServer(name)` after this resolves so the new entry boots.
+   * @param {string} name - Unique server name (key in `mcpServers`)
+   * @param {Object} server - Server definition: { command, args, env } for stdio, or { type, url, headers } for sse/http
+   * @returns {{ success: boolean, error: string | null }}
+   */
+  addMCPServerToConfig(name, server) {
+    if (!name || typeof name !== "string")
+      return { success: false, error: "Server name is required" };
+    if (!/^[A-Za-z0-9_-]+$/.test(name))
+      return {
+        success: false,
+        error:
+          "Server name may only contain letters, numbers, underscores, and dashes",
+      };
+    if (!server || typeof server !== "object")
+      return { success: false, error: "Server definition is required" };
+    if (!server.command && !server.url)
+      return {
+        success: false,
+        error:
+          "Server definition must include either `command` (stdio) or `url` (sse/http)",
+      };
+
+    const servers = safeJsonParse(
+      fs.readFileSync(this.mcpServerJSONPath, "utf8"),
+      { mcpServers: {} }
+    );
+    if (servers.mcpServers[name])
+      return {
+        success: false,
+        error: `MCP server "${name}" already exists in config file`,
+      };
+
+    servers.mcpServers[name] = server;
+    fs.writeFileSync(
+      this.mcpServerJSONPath,
+      JSON.stringify(servers, null, 2),
+      "utf8"
+    );
+    this.log(`MCP server ${name} added to config file`);
+    return { success: true, error: null };
+  }
+
+  /**
    * Remove the MCP server from the config file
    * @param {string} name - The name of the MCP server to remove
    * @returns {boolean} - True if the MCP server was removed, false otherwise

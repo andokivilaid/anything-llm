@@ -37,6 +37,25 @@ const MCPServers = {
   },
 
   /**
+   * Create a new MCP server in the config file and try to start it.
+   * @param {{ name: string, server: Object }} params - server is the Claude-Desktop-style definition
+   * @returns {Promise<{success: boolean, error: string | null, started: boolean}>}
+   */
+  newServer: async ({ name, server }) => {
+    return await fetch(`${API_BASE}/mcp-servers/new`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify({ name, server }),
+    })
+      .then((res) => res.json())
+      .catch((e) => ({
+        success: false,
+        error: e.message,
+        started: false,
+      }));
+  },
+
+  /**
    * Toggle the MCP server (start or stop)
    * @param {string} name - The name of the MCP server to toggle
    * @returns {Promise<{success: boolean, error: string | null}>}

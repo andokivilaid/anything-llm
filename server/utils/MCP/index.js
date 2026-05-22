@@ -208,6 +208,24 @@ class MCPCompatibilityLayer extends MCPHypervisor {
   }
 
   /**
+   * Create a new MCP server in the config file and attempt to start it.
+   * If the server fails to start it remains in the config so it can be inspected/fixed.
+   * @param {{ name: string, server: Object }} params
+   * @returns {Promise<{success: boolean, error: string | null, started: boolean}>}
+   */
+  async createServer({ name, server }) {
+    const added = this.addMCPServerToConfig(name, server);
+    if (!added.success) return { ...added, started: false };
+
+    const startup = await this.startMCPServer(name);
+    return {
+      success: true,
+      error: startup.success ? null : startup.error,
+      started: startup.success,
+    };
+  }
+
+  /**
    * Delete the MCP server - will also remove it from the config file
    * @param {string} name - The name of the MCP server to delete
    * @returns {Promise<{success: boolean, error: string | null}>}
