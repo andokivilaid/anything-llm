@@ -271,7 +271,7 @@ function AddMCPServerModal({ onClose, onCreated }) {
               <option value="stdio">stdio (local command)</option>
               <option value="sse">sse (remote URL)</option>
               <option value="streamable">streamable (remote URL)</option>
-              <option value="http">http (remote URL)</option>
+              {/* <option value="http">http (remote URL)</option> Redundant alias for `streamable` — backend treats both as StreamableHTTPClientTransport (server/utils/MCP/hypervisor/index.js:471). */}
             </select>
           </label>
 
